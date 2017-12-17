@@ -1,6 +1,19 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Bytecoin.
+//
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
@@ -34,39 +47,39 @@ using namespace CryptoNote;
 #endif
 
 namespace {
-  const command_line::arg_descriptor<std::string, true> arg_ip           = {"ip", "set ip"};
-  const command_line::arg_descriptor<uint16_t>      arg_port = { "port", "set port" };
-  const command_line::arg_descriptor<uint16_t>      arg_rpc_port           = {"rpc_port", "set rpc port"};
-  const command_line::arg_descriptor<uint32_t, true> arg_timeout         = {"timeout", "set timeout"};
-  const command_line::arg_descriptor<std::string> arg_priv_key           = {"private_key", "private key to subscribe debug command", "", true};
-  const command_line::arg_descriptor<uint64_t>    arg_peer_id            = {"peer_id", "peer_id if known(if not - will be requested)", 0};
-  const command_line::arg_descriptor<bool>        arg_generate_keys      = {"generate_keys_pair", "generate private and public keys pair"};
-  const command_line::arg_descriptor<bool>        arg_request_stat_info  = {"request_stat_info", "request statistics information"};
-  const command_line::arg_descriptor<bool>        arg_request_net_state  = {"request_net_state", "request network state information (peer list, connections count)"};
-  const command_line::arg_descriptor<bool>        arg_get_daemon_info    = {"rpc_get_daemon_info", "request daemon state info vie rpc (--rpc_port option should be set ).", "", true};
+    const command_line::arg_descriptor<std::string, true> arg_ip           = {"ip", "set ip"};
+    const command_line::arg_descriptor<uint16_t>      arg_port = { "port", "set port" };
+    const command_line::arg_descriptor<uint16_t>      arg_rpc_port           = {"rpc_port", "set rpc port"};
+    const command_line::arg_descriptor<uint32_t, true> arg_timeout         = {"timeout", "set timeout"};
+    const command_line::arg_descriptor<std::string> arg_priv_key           = {"private_key", "private key to subscribe debug command", "", true};
+    const command_line::arg_descriptor<uint64_t>    arg_peer_id            = {"peer_id", "peer_id if known(if not - will be requested)", 0};
+    const command_line::arg_descriptor<bool>        arg_generate_keys      = {"generate_keys_pair", "generate private and public keys pair"};
+    const command_line::arg_descriptor<bool>        arg_request_stat_info  = {"request_stat_info", "request statistics information"};
+    const command_line::arg_descriptor<bool>        arg_request_net_state  = {"request_net_state", "request network state information (peer list, connections count)"};
+    const command_line::arg_descriptor<bool>        arg_get_daemon_info    = {"rpc_get_daemon_info", "request daemon state info vie rpc (--rpc_port option should be set ).", "", true};
 }
 
 struct response_schema {
-  std::string status;
-  std::string COMMAND_REQUEST_STAT_INFO_status;
-  std::string COMMAND_REQUEST_NETWORK_STATE_status;
-  boost::optional<COMMAND_REQUEST_STAT_INFO::response> si_rsp;
-  boost::optional<COMMAND_REQUEST_NETWORK_STATE::response> ns_rsp;
+    std::string status;
+    std::string COMMAND_REQUEST_STAT_INFO_status;
+    std::string COMMAND_REQUEST_NETWORK_STATE_status;
+    boost::optional<COMMAND_REQUEST_STAT_INFO::response> si_rsp;
+    boost::optional<COMMAND_REQUEST_NETWORK_STATE::response> ns_rsp;
 };
 
 void withTimeout(System::Dispatcher& dispatcher, unsigned timeout, std::function<void()> f) {
   std::string result;
   System::ContextGroup cg(dispatcher);
   System::ContextGroupTimeout cgTimeout(dispatcher, cg, std::chrono::milliseconds(timeout));
-  
+
   cg.spawn([&] {
-    try {
-      f();
-    } catch (System::InterruptedException&) {
-      result = "Operation timeout";
-    } catch (std::exception& e) {
-      result = e.what();
-    }
+      try {
+        f();
+      } catch (System::InterruptedException&) {
+        result = "Operation timeout";
+      } catch (std::exception& e) {
+        result = e.what();
+      }
   });
 
   cg.wait();
@@ -78,7 +91,7 @@ void withTimeout(System::Dispatcher& dispatcher, unsigned timeout, std::function
 
 
 std::ostream& get_response_schema_as_json(std::ostream& ss, response_schema &rs) {
-  
+
   ss << "{" << ENDL
      << "  \"status\": \"" << rs.status << "\"," << ENDL
      << "  \"COMMAND_REQUEST_NETWORK_STATE_status\": \"" << rs.COMMAND_REQUEST_NETWORK_STATE_status << "\"," << ENDL
@@ -142,11 +155,11 @@ bool print_COMMAND_REQUEST_STAT_INFO(const COMMAND_REQUEST_STAT_INFO::response &
   std::cout << "INC Connections:     " << si.incoming_connections_count << ENDL;
 
 
-  std::cout << "Tx pool size:        " << si.payload_info.tx_pool_size << ENDL;
-  std::cout << "BC height:           " << si.payload_info.blockchain_height << ENDL;
-  std::cout << "Mining speed:          " << si.payload_info.mining_speed << ENDL;
-  std::cout << "Alternative blocks:  " << si.payload_info.alternative_blocks << ENDL;
-  std::cout << "Top block id:        " << si.payload_info.top_block_id_str << ENDL;
+  std::cout << "Tx pool size:        " << si.payload_info.transactionPoolSize << ENDL;
+  std::cout << "BC height:           " << si.payload_info.blockchainHeight << ENDL;
+  std::cout << "Mining speed:          " << si.payload_info.miningSpeed << ENDL;
+  std::cout << "Alternative blocks:  " << si.payload_info.alternativeBlockCount << ENDL;
+  std::cout << "Top block id:        " << si.payload_info.topBlockHashString << ENDL;
   return true;
 }
 //---------------------------------------------------------------------------------------------------------------
@@ -188,15 +201,15 @@ bool handle_get_daemon_info(po::variables_map& vm) {
     invokeJsonCommand(httpClient, "/getinfo", req, res); // TODO: timeout
 
     std::cout << "OK" << ENDL
-      << "height: " << res.height << ENDL
-      << "difficulty: " << res.difficulty << ENDL
-      << "tx_count: " << res.tx_count << ENDL
-      << "tx_pool_size: " << res.tx_pool_size << ENDL
-      << "alt_blocks_count: " << res.alt_blocks_count << ENDL
-      << "outgoing_connections_count: " << res.outgoing_connections_count << ENDL
-      << "incoming_connections_count: " << res.incoming_connections_count << ENDL
-      << "white_peerlist_size: " << res.white_peerlist_size << ENDL
-      << "grey_peerlist_size: " << res.grey_peerlist_size << ENDL;
+              << "height: " << res.height << ENDL
+              << "difficulty: " << res.difficulty << ENDL
+              << "tx_count: " << res.tx_count << ENDL
+              << "tx_pool_size: " << res.tx_pool_size << ENDL
+              << "alt_blocks_count: " << res.alt_blocks_count << ENDL
+              << "outgoing_connections_count: " << res.outgoing_connections_count << ENDL
+              << "incoming_connections_count: " << res.incoming_connections_count << ENDL
+              << "white_peerlist_size: " << res.white_peerlist_size << ENDL
+              << "grey_peerlist_size: " << res.grey_peerlist_size << ENDL;
 
   } catch (const std::exception& e) {
     std::cout << "ERROR: " << e.what() << std::endl;
@@ -233,7 +246,7 @@ bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
     System::TcpConnection connection;
 
     withTimeout(dispatcher, timeout, [&] {
-      connection = connector.connect(addr, command_line::get_arg(vm, arg_port));
+        connection = connector.connect(addr, command_line::get_arg(vm, arg_port));
     });
 
     rs.status = "OK";
@@ -244,7 +257,7 @@ bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
       COMMAND_REQUEST_PEER_ID::request req;
       COMMAND_REQUEST_PEER_ID::response rsp;
       withTimeout(dispatcher, timeout, [&] {
-        levin.invoke(COMMAND_REQUEST_PEER_ID::ID, req, rsp);
+          levin.invoke(COMMAND_REQUEST_PEER_ID::ID, req, rsp);
       });
       peer_id = rsp.my_id;
     }
@@ -265,14 +278,14 @@ bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
 
       try {
         withTimeout(dispatcher, timeout, [&] {
-          levin.invoke(COMMAND_REQUEST_STAT_INFO::ID, req, res);
+            levin.invoke(COMMAND_REQUEST_STAT_INFO::ID, req, res);
         });
         rs.si_rsp = std::move(res);
         rs.COMMAND_REQUEST_STAT_INFO_status = "OK";
       } catch (const std::exception &e) {
         std::stringstream ss;
-        ss << "ERROR: Failed to invoke remote command COMMAND_REQUEST_STAT_INFO to " 
-           << command_line::get_arg(vm, arg_ip) << ":" << command_line::get_arg(vm, arg_port) 
+        ss << "ERROR: Failed to invoke remote command COMMAND_REQUEST_STAT_INFO to "
+           << command_line::get_arg(vm, arg_ip) << ":" << command_line::get_arg(vm, arg_port)
            << " - " << e.what();
         rs.COMMAND_REQUEST_STAT_INFO_status = ss.str();
       }
@@ -287,7 +300,7 @@ bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
 
       try {
         withTimeout(dispatcher, timeout, [&] {
-          levin.invoke(COMMAND_REQUEST_NETWORK_STATE::ID, req, res);
+            levin.invoke(COMMAND_REQUEST_NETWORK_STATE::ID, req, res);
         });
         rs.ns_rsp = std::move(res);
         rs.COMMAND_REQUEST_NETWORK_STATE_status = "OK";
@@ -340,17 +353,17 @@ int main(int argc, char *argv[]) {
 
   po::variables_map vm;
   bool r = command_line::handle_error_helper(desc_all, [&]() {
-    po::store(command_line::parse_command_line(argc, argv, desc_general, true), vm);
-    if (command_line::get_arg(vm, command_line::arg_help))
-    {
-      std::cout << desc_all << ENDL;
-      return false;
-    }
+      po::store(command_line::parse_command_line(argc, argv, desc_general, true), vm);
+      if (command_line::get_arg(vm, command_line::arg_help))
+      {
+        std::cout << desc_all << ENDL;
+        return false;
+      }
 
-    po::store(command_line::parse_command_line(argc, argv, desc_params, false), vm);
-    po::notify(vm);
+      po::store(command_line::parse_command_line(argc, argv, desc_params, false), vm);
+      po::notify(vm);
 
-    return true;
+      return true;
   });
 
   if (!r)
@@ -359,11 +372,11 @@ int main(int argc, char *argv[]) {
   if (command_line::has_arg(vm, arg_request_stat_info) || command_line::has_arg(vm, arg_request_net_state)) {
     return handle_request_stat(vm, command_line::get_arg(vm, arg_peer_id)) ? 0 : 1;
   }
-  
+
   if (command_line::has_arg(vm, arg_get_daemon_info)) {
     return handle_get_daemon_info(vm) ? 0 : 1;
-  } 
-  
+  }
+
   if (command_line::has_arg(vm, arg_generate_keys)) {
     return generate_and_print_keys() ? 0 : 1;
   }
